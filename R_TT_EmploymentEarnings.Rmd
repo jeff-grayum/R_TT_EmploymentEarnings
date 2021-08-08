@@ -107,5 +107,19 @@ earn %>%
        title = "Median weekly earnings by race") +
   scale_y_continuous(labels = dollar) +
   theme_hc()
+
+earn %>%
+  filter(race != "All Races") %>%
+  group_by(race, sex, year) %>%
+  summarize(mean_employed = mean(n_persons, na.rm = TRUE)) %>%
+  ggplot() +
+  geom_col(aes(year, mean_employed, fill = race)) +
+  labs(x = "Year", 
+       y = "Mean employed",
+       title = "Mean number of employed individuals",
+       fill = "") +
+  theme_few() +
+  scale_y_continuous(labels = comma) 
+  
 ```
 
