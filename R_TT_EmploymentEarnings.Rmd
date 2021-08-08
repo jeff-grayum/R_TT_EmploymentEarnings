@@ -1,0 +1,111 @@
+---
+title: "TT_EmploymenEarnings"
+author: "Jeff Grayum"
+date: "8/8/2021"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Loading libraries.        
+```{r}
+library(tidyverse)
+library(tidytuesdayR)
+library(scales)
+library(ggthemes)
+library(gganimate)
+library(gifski)
+```
+
+Loading datasets.
+```{r}
+tuesdata <- tidytuesdayR::tt_load('2021-02-23')
+
+earn <- tuesdata$earn
+
+employed <- tuesdata$employed
+```
+
+A bit of my own analysis before watching the screencast.
+```{r}
+earn %>%
+  summary()
+
+earn %>%
+  view()
+
+employed %>%
+  summary()
+
+employed %>%
+  view()
+
+earn %>%
+  count(sex, sort = TRUE)
+
+earn %>%
+  group_by(sex, year) %>%
+  summarize(mean_income = mean(median_weekly_earn),
+            mean_persons = mean(n_persons)) %>%
+  ggplot(aes(year, mean_income, color = sex, size = mean_persons)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  labs(x = "Year",
+       y = "Mean weekly income",
+       title = "Mean weekly earned income",
+       color = "Sex",
+       size = "Mean persons") +
+  theme_fivethirtyeight() +
+  theme(axis.title = element_text(),
+        text = element_text(family = "Times New Roman")) +
+  scale_size_continuous(labels = comma)
+
+#Very busy and sloppy.  How to group into larger age groups?
+earn %>%
+  group_by(year, age) %>%
+  summarize(mean_age_income = mean(median_weekly_earn)) %>%
+  ggplot(aes(year, mean_age_income, color = age)) +
+  geom_line() +
+  theme_few() +
+  labs(x = "Year",
+       y = "Mean weekly income", 
+       color = "Age group",
+       title = "Weekly earned income by age") +
+  scale_y_continuous(labels = dollar)
+
+earn %>%
+  filter(age != "16 years and over",
+         age != "25 years and over",
+         age != "55 years and over") %>%
+  ggplot(aes(age, median_weekly_earn, group = age)) +
+  geom_boxplot() +
+  labs(x = "", 
+       y = "Median weekly income",
+       title = "Median weekly income by age") +
+  theme_hc() +
+  theme(axis.text.x = element_text(angle = 90))
+
+
+earn %>%
+  ggplot(aes(sex, median_weekly_earn, group = sex)) +
+  geom_boxplot() +
+  labs(x = "",
+       y = "Median weekly earnings",
+       title = "Median weekly earnings by sex") +
+  scale_y_continuous(labels = dollar) +
+  theme_hc()
+
+earn %>%
+  ggplot(aes(race, median_weekly_earn, group = race)) +
+  geom_boxplot() +
+  labs(x = "",
+       y = "Median weekly earnings",
+       title = "Median weekly earnings by race") +
+  scale_y_continuous(labels = dollar) +
+  theme_hc()
+```
+
