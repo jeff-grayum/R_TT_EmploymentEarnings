@@ -146,7 +146,7 @@ employed %>%
 
 employed_cleaned <- employed %>%
   filter(!is.na(employ_n)) %>%
-  mutate(industry = fct_lump(industry, 8, w = employ_n)) %>%
+  mutate(industry = fct_lump(industry, 15, w = employ_n)) %>%
   mutate(industry = fct_reorder(industry, employ_n, sum)) 
   
 employed_cleaned %>%
@@ -181,7 +181,105 @@ employed_cleaned %>%
          industry == "Wholesale and retail trade") %>%
   view()
   
+employed_cleaned %>%
+  filter(dimension == "Gender") %>%
+  group_by(industry, year, race_gender) %>%
+  summarize(employed_n = sum(employ_n)) %>%
+  ggplot(aes(year, employed_n, color = race_gender)) +
+  geom_line() +
+  theme_few() +
+  labs(x = "Year",
+       y = "# Employed in industry",
+       title = "Number of employeed in each industry",
+       color= "Gender") +
+  scale_y_continuous(labels = comma) +
+  theme(legend.position = "bottom") +
+  facet_wrap(~industry, scales = "free_y") +
+  expand_limits(y = 0)
 
 ```
 
+Not a ton of variation between 2015 - 2019.  Let's look at 2019 - 2020.
+```{r}
+industry_2019_2020 <- employed_cleaned %>%
+  filter(year %in% c(2019, 2020)) %>%
+  group_by(year, industry, dimension, race_gender) %>%
+  summarize(employ_n = sum(employ_n)) 
+
+industry_2019_2020 %>%
+  filter(dimension == "Total") %>%
+  mutate(industry = fct_reorder(industry, employ_n, sum)) %>%
+  ggplot(aes(year, employ_n, color = industry)) +
+  geom_line() +
+  expand_limits(y = 0) +
+  scale_color_discrete(guide = guide_legend(reverse = TRUE)) +
+  scale_y_continuous(labels = comma) +
+  scale_x_continuous(breaks = 2019:2020) +
+  labs(x = "",
+       y = "# employed",
+       color = "Industry", 
+       title = "What industries were most affected by covid?") +
+  theme_solarized_2()
+
+compare_2019_2020 <- industry_2019_2020 %>%
+  arrange(year) %>%
+  group_by(industry, dimension, race_gender) %>%
+  summarize(ratio = last(employ_n) / first(employ_n),
+            change = ratio -1,
+            employed_2019 = first(employ_n)) 
+
+compare_2019_2020 %>%
+  filter(dimension == "Total") %>%
+  ungroup() %>% 
+  mutate(industry = fct_reorder(industry, change)) %>%
+  ggplot(aes(change, industry)) +
+  geom_col() +
+  scale_x_continuous(labels = percent) +
+  labs(x = "% change",
+       y = "Industry",
+       title = "What industries were most impacted by covid?",
+       caption = "Source: BLS") +
+  theme_fivethirtyeight() +
+  theme(axis.title = element_text(),
+        text = element_text(family = "Times New Roman"))
+
+compare_2019_2020 %>%
+  filter(dimension == "Gender") %>%
+  ungroup() %>% 
+  mutate(industry = fct_reorder(industry, change)) %>%
+  ggplot(aes(change, industry, fill = race_gender)) +
+  geom_col(position = "dodge") +
+  scale_x_continuous(labels = percent) +
+  labs(x = "% change",
+       y = "Industry",
+       title = "What industries were most impacted by covid?",
+       caption = "Source: BLS",
+       fill = "") +
+  theme_fivethirtyeight() +
+  theme(axis.title = element_text(),
+        text = element_text(family = "Times New Roman")) +
+  scale_fill_discrete(guide = guide_legend(reverse = TRUE))
+
+compare_2019_2020 %>%
+  filter(dimension == "Gender") %>%
+  ungroup() %>% 
+  mutate(industry = fct_reorder(industry, change)) %>%
+  ggplot(aes(change, industry, color = race_gender)) +
+  geom_errorbarh(aes(xmin = 0, xmax = change), height = 0) +
+  geom_point(aes(size = employed_2019, color = race_gender)) +
+  scale_x_continuous(labels = percent) +
+  scale_size_continuous(labels = comma, guide = FALSE) +
+  labs(x = "% change",
+       y = "Industry",
+       title = "What industries were most impacted by covid?",
+       caption = "Source: BLS",
+       color = "",
+       size = "# employed 2019",
+       subtitle = "Size of point is proportional to size of industry in 2019") +
+  theme_fivethirtyeight() +
+  theme(axis.title = element_text(),
+        text = element_text(family = "Times New Roman")) +
+  scale_color_discrete(guide = guide_legend(reverse = TRUE)) +
+  geom_vline(aes(xintercept = 0), lty = 2)
+```
 
