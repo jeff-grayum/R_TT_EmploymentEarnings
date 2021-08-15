@@ -109,17 +109,79 @@ earn %>%
   theme_hc()
 
 earn %>%
-  filter(race != "All Races") %>%
+  filter(race != "All Races",
+         sex != "Both Sexes") %>%
   group_by(race, sex, year) %>%
   summarize(mean_employed = mean(n_persons, na.rm = TRUE)) %>%
-  ggplot() +
-  geom_col(aes(year, mean_employed, fill = race)) +
+  ggplot(aes(year, mean_employed, fill = race)) +
+  geom_col() +
   labs(x = "Year", 
        y = "Mean employed",
        title = "Mean number of employed individuals",
        fill = "") +
   theme_few() +
   scale_y_continuous(labels = comma) 
-  
 ```
+
+Ok. Now for the screencast.
+```{r}
+employed %>%
+  count(industry, sort = TRUE)
+
+employed %>%
+  count(industry, major_occupation, sort = TRUE)
+
+employed %>%
+  count(race_gender, sort = TRUE)
+
+employed <- employed %>%
+  mutate(dimension = case_when(
+    race_gender == "TOTAL" ~ "Total",
+    race_gender %in% c("Men", "Women") ~ "Gender",
+    TRUE ~ "Race"
+  )) 
+
+employed %>% 
+  view()
+
+employed_cleaned <- employed %>%
+  filter(!is.na(employ_n)) %>%
+  mutate(industry = fct_lump(industry, 8, w = employ_n)) %>%
+  mutate(industry = fct_reorder(industry, employ_n, sum)) 
+  
+employed_cleaned %>%
+  filter(dimension == "Total") %>%
+  ggplot(aes(year, employ_n, fill = industry)) +
+  geom_col() +
+  theme_few() +
+  labs(x = "Year",
+       y = "# Employed in industry",
+       title = "Number of employeed in each industry",
+       fill = "Industry") +
+  scale_y_continuous(labels = comma) +
+  theme(legend.position = "bottom") +
+  expand_limits(y = 0)
+
+
+employed_cleaned %>%
+  filter(dimension == "Gender") %>%
+  ggplot(aes(year, employ_n, fill = race_gender)) +
+  geom_col() +
+  theme_few() +
+  labs(x = "Year",
+       y = "# Employed in industry",
+       title = "Number of employeed in each industry",
+       fill = "Gender") +
+  scale_y_continuous(labels = comma) +
+  theme(legend.position = "bottom") +
+  facet_wrap(~industry, scales = "free_y")
+
+employed_cleaned %>%
+  filter(year == "2020",
+         industry == "Wholesale and retail trade") %>%
+  view()
+  
+
+```
+
 
