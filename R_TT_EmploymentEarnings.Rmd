@@ -283,3 +283,47 @@ compare_2019_2020 %>%
   geom_vline(aes(xintercept = 0), lty = 2)
 ```
 
+```{r}
+compare_2019_2020 %>%
+  filter(dimension == "Race") %>%
+  ungroup() %>% 
+  mutate(industry = fct_reorder(industry, change)) %>%
+  ggplot(aes(change, industry, fill = race_gender)) +
+  geom_col(position = "dodge") +
+  scale_x_continuous(labels = percent) +
+  labs(x = "% change",
+       y = "Industry",
+       title = "What industries were most impacted by covid?",
+       caption = "Source: BLS",
+       fill = "Race") +
+  theme_fivethirtyeight() +
+  theme(axis.title = element_text(),
+        text = element_text(family = "Times New Roman")) +
+  scale_fill_discrete(guide = guide_legend(reverse = TRUE))
+
+compare_2019_2020 %>%
+  filter(dimension == "Race") %>%
+  ungroup() %>% 
+  mutate(industry = fct_reorder(industry, change)) %>%
+  ggplot(aes(change, industry, color = race_gender)) +
+  geom_errorbarh(aes(xmin = 0, xmax = change, group = race_gender), height = 0,
+                 position = position_dodge(width = 0.8)) +
+  geom_point(aes(size = employed_2019, color = race_gender),
+             position = position_dodge(width = 0.8)) +
+  scale_x_continuous(labels = percent) +
+  scale_size_continuous(labels = comma, guide = FALSE) +
+  labs(x = "% change",
+       y = "Industry",
+       title = "What industries were most impacted by covid?",
+       caption = "Source: BLS",
+       color = "Race",
+       size = "# employed 2019",
+       subtitle = "Size of point is proportional to size of industry in 2019") +
+  theme_fivethirtyeight() +
+  theme(axis.title = element_text(),
+        text = element_text(family = "Times New Roman")) +
+  scale_color_discrete(guide = guide_legend(reverse = TRUE)) +
+  geom_vline(aes(xintercept = 0), lty = 2)
+
+```
+
