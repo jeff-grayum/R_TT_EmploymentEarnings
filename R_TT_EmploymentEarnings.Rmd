@@ -452,6 +452,7 @@ comparison %>%
   filter(industry == "Construction") %>%
   compare_lollipop()
   
+#
   
            
 ```
